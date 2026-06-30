@@ -8,6 +8,7 @@ import com.atlas.cart.dto.CartItemResponse.Price;
 import com.atlas.cart.entity.*;
 import com.atlas.cart.exception.*;
 import com.atlas.cart.repository.CartRepository;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,7 +26,7 @@ import java.util.*;
 public class CartServiceImpl implements CartService {
 
   private static final int SCALE = 2;
-  private static final RoundingMode ROUNDING = RoundingMode.HALF_UP;
+  private static final RoundingMode ROUNDING = RoundingMode.HALF_EVEN;
   private static final String CURRENCY_USD = "USD";
 
   private final CartRepository cartRepository;
@@ -186,7 +187,7 @@ public class CartServiceImpl implements CartService {
       BigDecimal rateToUSD =
           getRateConversionToUSD(item.getUnitPrice().getCurrency(), item.getId());
 
-      unitPriceInUSD = item.getUnitPrice().getAmount().divide(rateToUSD, RoundingMode.HALF_EVEN);
+      unitPriceInUSD = item.getUnitPrice().getAmount().divide(rateToUSD, ROUNDING);
     }
 
     BigDecimal lineTotalInUSD = unitPriceInUSD
@@ -221,8 +222,14 @@ public class CartServiceImpl implements CartService {
 
   private BigDecimal getRateConversionToUSD(String currency, UUID cartItemId) {
     if (currency.equals(CURRENCY_USD)) return BigDecimal.ONE;
+    List<ExchangeRateDto> exchangeRates;
+    try {
+       exchangeRates = exchangeRateClient.getUSDExchangeRates();
+    } catch (FeignException e) {
+      log.error("Exchange Rate unavailable for Currency={}", currency, e);
+      throw new CurrencyMismatchException(cartItemId);
+    }
 
-    List<ExchangeRateDto> exchangeRates = exchangeRateClient.getUSDExchangeRates();
     return exchangeRates.stream()
         .filter(exchange ->
             exchange.quote().equals(currency)

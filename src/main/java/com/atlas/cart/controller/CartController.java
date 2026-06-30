@@ -19,7 +19,7 @@ import java.util.UUID;
  * UserId is extracted from the JWT (SEC-004).
  */
 @RestController
-@RequestMapping("/carts")
+@RequestMapping("/api/v1/carts")
 @RequiredArgsConstructor
 public class CartController {
 

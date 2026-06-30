@@ -6,7 +6,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @FeignClient(
-    name = "hotel-service",
+    name = "frankfurter-api",
     url = "${clients.frankfurter.base-url}"
 )
 public interface ExchangeRateClient {
