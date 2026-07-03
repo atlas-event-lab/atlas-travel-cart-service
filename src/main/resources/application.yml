@@ -39,7 +39,7 @@ atlas:
 
 clients:
   frankfurter:
-    base-url: https://api.frankfurter.dev
+    base-url: ${EXCHANGE_RATE_API_URL:https://api.frankfurter.dev}
 
 management:
   server:

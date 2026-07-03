@@ -62,6 +62,7 @@ public class CartServiceImpl implements CartService {
   @Override
   @Transactional(readOnly = true)
   public CartResponse getCart(UUID cartId, UUID userId) {
+    log.info("Get cart Id={} for userId={}", cartId, userId);
     Cart cart = findAndAuthorize(cartId, userId);
     checkNotExpired(cart);
     return toResponse(cart);
