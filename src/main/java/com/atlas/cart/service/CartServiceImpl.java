@@ -26,6 +26,7 @@ import java.util.*;
 public class CartServiceImpl implements CartService {
 
   private static final int SCALE = 2;
+  private static final int CONVERSION_SCALE = 6;
   private static final RoundingMode ROUNDING = RoundingMode.HALF_EVEN;
   private static final String CURRENCY_USD = "USD";
 
@@ -188,7 +189,7 @@ public class CartServiceImpl implements CartService {
       BigDecimal rateToUSD =
           getRateConversionToUSD(item.getUnitPrice().getCurrency(), item.getId());
 
-      unitPriceInUSD = item.getUnitPrice().getAmount().divide(rateToUSD, ROUNDING);
+      unitPriceInUSD = item.getUnitPrice().getAmount().divide(rateToUSD, CONVERSION_SCALE, ROUNDING);
     }
 
     BigDecimal lineTotalInUSD = unitPriceInUSD
