@@ -4,6 +4,7 @@ import com.atlas.cart.entity.CartItemType;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 import lombok.Builder;
 
@@ -14,6 +15,9 @@ public record CartItemResponse(
     UUID resourceId,
     Instant addedAt,
     Integer quantity,
+    // Present for HOTEL items only (ADR-0011); null for FLIGHT.
+    LocalDate checkIn,
+    LocalDate checkOut,
     Price price,
     Price priceInUSD
 ) {

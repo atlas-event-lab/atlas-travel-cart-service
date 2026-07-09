@@ -18,4 +18,7 @@ public class CartProperties {
 
     private long sweepIntervalMs = 60_000L;
 
+    /** Max hotel stay length accepted on a cart item (ADR-0011); must match Search/Booking. */
+    private int maxStayNights = 30;
+
 }

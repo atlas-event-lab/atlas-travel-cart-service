@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Optional;
 import java.util.UUID;
@@ -36,6 +37,8 @@ class CartServiceImplTest {
   private static final UUID OTHER_USER = UUID.fromString("22222222-2222-2222-2222-222222222222");
   private static final Instant NOW = Instant.parse("2026-01-15T12:00:00Z");
   private static final String CURRENCY = "USD";
+  private static final LocalDate CHECK_IN  = LocalDate.of(2026, 2, 1);
+  private static final LocalDate CHECK_OUT = LocalDate.of(2026, 2, 4); // 3 nights
 
   @Mock
   CartRepository cartRepository;
@@ -75,7 +78,7 @@ class CartServiceImplTest {
     return new CartItemUpsertRequest(
         UUID.randomUUID(),
         new MoneyDto(new BigDecimal("250.00"), CURRENCY),
-        2
+        2, null, null
     );
   }
 
@@ -83,32 +86,23 @@ class CartServiceImplTest {
     return new CartItemUpsertRequest(
         UUID.randomUUID(),
         new MoneyDto(new BigDecimal("150.00"), CURRENCY),
-        3
+        3, CHECK_IN, CHECK_OUT
     );
   }
 
   private void addFlightItem(Cart cart) {
     CartItemUpsertRequest req = flightRequest();
-    CartItem item = new CartItem(
-        UUID.randomUUID(),
-        CartItemType.FLIGHT,
-        req.resourceId(),
-        new Money(req.unitPrice().amount(), req.unitPrice().currency()),
-        req.quantity()
-    );
-    cart.addItem(item);
+    cart.addItem(new FlightCartItem(
+        UUID.randomUUID(), req.resourceId(),
+        new Money(req.unitPrice().amount(), req.unitPrice().currency()), req.quantity()));
   }
 
   private void addHotelItem(Cart cart) {
     CartItemUpsertRequest req = hotelRequest();
-    CartItem item = new CartItem(
-        UUID.randomUUID(),
-        CartItemType.HOTEL,
-        req.resourceId(),
-        new Money(req.unitPrice().amount(), req.unitPrice().currency()),
-        req.quantity()
-    );
-    cart.addItem(item);
+    cart.addItem(new HotelCartItem(
+        UUID.randomUUID(), req.resourceId(),
+        new Money(req.unitPrice().amount(), req.unitPrice().currency()), req.quantity(),
+        CHECK_IN, CHECK_OUT));
   }
 
   // -- createOrGetCart --------------------------------------------------------
@@ -248,12 +242,54 @@ class CartServiceImplTest {
       CartItemUpsertRequest request = new CartItemUpsertRequest(
           UUID.randomUUID(),
           new MoneyDto(new BigDecimal("100.00"), "EUR"),
-          1
+          1, null, null
       );
 
       assertThatThrownBy(
           () -> service.upsertItem(cart.getId(), USER_ID, CartItemType.FLIGHT, request))
           .isInstanceOf(CurrencyMismatchException.class);
+    }
+
+    @Test
+    void addsHotelWithStayDates_andEchoesThem() {
+      Cart cart = activeCart();
+      when(cartRepository.findById(cart.getId())).thenReturn(Optional.of(cart));
+
+      CartItemUpsertRequest request = hotelRequest();
+      CartResponse response = service.upsertItem(cart.getId(), USER_ID, CartItemType.HOTEL, request);
+
+      assertThat(response.items()).hasSize(1);
+      assertThat(response.items().getFirst().type()).isEqualTo(CartItemType.HOTEL);
+      assertThat(response.items().getFirst().checkIn()).isEqualTo(CHECK_IN);
+      assertThat(response.items().getFirst().checkOut()).isEqualTo(CHECK_OUT);
+    }
+
+    @Test
+    void rejectsHotelMissingDates() {
+      Cart cart = activeCart();
+      when(cartRepository.findById(cart.getId())).thenReturn(Optional.of(cart));
+
+      CartItemUpsertRequest request = new CartItemUpsertRequest(
+          UUID.randomUUID(), new MoneyDto(new BigDecimal("150.00"), CURRENCY), 1, null, null);
+
+      assertThatThrownBy(
+          () -> service.upsertItem(cart.getId(), USER_ID, CartItemType.HOTEL, request))
+          .isInstanceOf(CartValidationException.class);
+    }
+
+    @Test
+    void rejectsHotelStayExceedingMaxStay() {
+      Cart cart = activeCart();
+      when(cartRepository.findById(cart.getId())).thenReturn(Optional.of(cart));
+
+      // 40 nights > default max of 30.
+      CartItemUpsertRequest request = new CartItemUpsertRequest(
+          UUID.randomUUID(), new MoneyDto(new BigDecimal("150.00"), CURRENCY), 1,
+          CHECK_IN, CHECK_IN.plusDays(40));
+
+      assertThatThrownBy(
+          () -> service.upsertItem(cart.getId(), USER_ID, CartItemType.HOTEL, request))
+          .isInstanceOf(CartValidationException.class);
     }
 
     @Test

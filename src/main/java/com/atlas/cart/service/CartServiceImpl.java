@@ -18,6 +18,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Slf4j
@@ -77,20 +79,43 @@ public class CartServiceImpl implements CartService {
     checkActive(cart);
 
     cart.removeItemsByType(type);
-
-    CartItem item = new CartItem(
-        UUID.randomUUID(),
-        type,
-        request.resourceId(),
-        new Money(request.unitPrice().amount(), request.unitPrice().currency()),
-        request.quantity()
-    );
-
-    cart.addItem(item);
+    cart.addItem(buildItem(type, request));
 
     log.info("Cart item upserted: cartId={}, type={}, resourceId={}", cartId, type,
         request.resourceId());
     return toResponse(cart);
+  }
+
+  /** Builds the polymorphic cart item; hotel items validate and carry the stay range (ADR-0011). */
+  private CartItem buildItem(CartItemType type, CartItemUpsertRequest request) {
+    Money unitPrice = new Money(request.unitPrice().amount(), request.unitPrice().currency());
+    if (type == CartItemType.HOTEL) {
+      validateHotelStay(request);
+      return new HotelCartItem(UUID.randomUUID(), request.resourceId(), unitPrice, request.quantity(),
+          request.checkIn(), request.checkOut());
+    }
+    return new FlightCartItem(UUID.randomUUID(), request.resourceId(), unitPrice, request.quantity());
+  }
+
+  /** Hotel stay-date rules (ADR-0011): dates present, checkOut > checkIn, checkIn ≥ today, nights ≤ maxStay. */
+  private void validateHotelStay(CartItemUpsertRequest request) {
+    LocalDate checkIn = request.checkIn();
+    LocalDate checkOut = request.checkOut();
+    if (checkIn == null || checkOut == null) {
+      throw new CartValidationException("checkIn and checkOut are required for HOTEL items");
+    }
+    if (!checkOut.isAfter(checkIn)) {
+      throw new CartValidationException(
+          "checkOut must be after checkIn (checkIn=" + checkIn + ", checkOut=" + checkOut + ")");
+    }
+    if (checkIn.isBefore(LocalDate.now(clock))) {
+      throw new CartValidationException("checkIn must be today or in the future (checkIn=" + checkIn + ")");
+    }
+    long nights = ChronoUnit.DAYS.between(checkIn, checkOut);
+    if (nights > cartProperties.getMaxStayNights()) {
+      throw new CartValidationException(
+          "stay length (" + nights + " nights) exceeds the maximum of " + cartProperties.getMaxStayNights());
+    }
   }
 
   @Override
@@ -200,12 +225,17 @@ public class CartServiceImpl implements CartService {
         .multiply(BigDecimal.valueOf(item.getQuantity()))
         .setScale(SCALE, ROUNDING);
 
+    LocalDate checkIn = (item instanceof HotelCartItem hotel) ? hotel.getCheckIn() : null;
+    LocalDate checkOut = (item instanceof HotelCartItem hotel) ? hotel.getCheckOut() : null;
+
     return CartItemResponse.builder()
         .id(item.getId())
-        .type(item.getType())
+        .type(item.type())
         .resourceId(item.getResourceId())
         .quantity(item.getQuantity())
         .addedAt(item.getAddedAt())
+        .checkIn(checkIn)
+        .checkOut(checkOut)
         .price(
             Price.builder()
                 .unitPrice(item.getUnitPrice().getAmount())

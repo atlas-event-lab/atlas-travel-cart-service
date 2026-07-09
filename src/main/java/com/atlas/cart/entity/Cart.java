@@ -64,7 +64,7 @@ public class Cart {
     }
 
     public void removeItemsByType(CartItemType type) {
-        cartItems.removeIf(cartItem -> cartItem.getType() == type);
+        cartItems.removeIf(cartItem -> cartItem.type() == type);
     }
 
     public boolean removeItemById(UUID itemId) {

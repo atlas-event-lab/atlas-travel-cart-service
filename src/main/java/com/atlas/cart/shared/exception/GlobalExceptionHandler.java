@@ -44,6 +44,14 @@ public class GlobalExceptionHandler {
         return respond(HttpStatus.BAD_REQUEST, problem);
     }
 
+    @ExceptionHandler(com.atlas.cart.exception.CartValidationException.class)
+    public ResponseEntity<ProblemDetail> handleCartValidation(
+            com.atlas.cart.exception.CartValidationException ex, HttpServletRequest request) {
+        ProblemDetail problem = problem(HttpStatus.BAD_REQUEST, ex.getMessage(),
+                ProblemTypes.VALIDATION, "Validation Error", request);
+        return respond(HttpStatus.BAD_REQUEST, problem);
+    }
+
     @ExceptionHandler({CartNotFoundException.class, CartItemNotFoundException.class})
     public ResponseEntity<ProblemDetail> handleNotFound(RuntimeException ex, HttpServletRequest request) {
         return respond(HttpStatus.NOT_FOUND, problem(HttpStatus.NOT_FOUND, ex.getMessage(),
