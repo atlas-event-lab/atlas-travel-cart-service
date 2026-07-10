@@ -396,14 +396,14 @@ class CartServiceImplTest {
       Cart cart = activeCart();
       // Flight: 250.00 * 2 = 500.00
       addFlightItem(cart);
-      // Hotel: 150.00 * 3 = 450.00
+      // Hotel: 150.00 * 3 * 3 = 1350.00
       addHotelItem(cart);
       when(cartRepository.findById(cart.getId())).thenReturn(Optional.of(cart));
 
       CartResponse response = service.getCart(cart.getId(), USER_ID);
 
-      // Total = 500.00 + 450.00 = 950.00
-      assertThat(response.totalInUSD().amount()).isEqualByComparingTo(new BigDecimal("950.00"));
+      // Total = 500.00 + 1350.00 = 1850.00
+      assertThat(response.totalInUSD().amount()).isEqualByComparingTo(new BigDecimal("1850.00"));
       assertThat(response.totalInUSD().currency()).isEqualTo(CURRENCY);
     }
 

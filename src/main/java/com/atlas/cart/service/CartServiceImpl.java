@@ -217,12 +217,19 @@ public class CartServiceImpl implements CartService {
       unitPriceInUSD = item.getUnitPrice().getAmount().divide(rateToUSD, CONVERSION_SCALE, ROUNDING);
     }
 
+    // A hotel is charged for the whole stay: pricePerNight × nights × rooms (ADR-0010/0011),
+    // so the cart total matches what Booking recomputes and re-validates. Flights = unitPrice × qty.
+    long units = item.getQuantity();
+    if (item instanceof HotelCartItem hotel) {
+      units *= ChronoUnit.DAYS.between(hotel.getCheckIn(), hotel.getCheckOut());
+    }
+
     BigDecimal lineTotalInUSD = unitPriceInUSD
-        .multiply(BigDecimal.valueOf(item.getQuantity()))
+        .multiply(BigDecimal.valueOf(units))
         .setScale(SCALE, ROUNDING);
 
     BigDecimal lineTotal = item.getUnitPrice().getAmount()
-        .multiply(BigDecimal.valueOf(item.getQuantity()))
+        .multiply(BigDecimal.valueOf(units))
         .setScale(SCALE, ROUNDING);
 
     LocalDate checkIn = (item instanceof HotelCartItem hotel) ? hotel.getCheckIn() : null;
