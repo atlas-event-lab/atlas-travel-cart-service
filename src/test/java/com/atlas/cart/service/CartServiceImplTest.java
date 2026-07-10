@@ -1,6 +1,6 @@
 package com.atlas.cart.service;
 
-import com.atlas.cart.client.ExchangeRateClient;
+import com.atlas.cart.client.ExchangeRateService;
 import com.atlas.cart.config.CartProperties;
 import com.atlas.cart.dto.CartItemUpsertRequest;
 import com.atlas.cart.dto.CartResponse;
@@ -44,18 +44,16 @@ class CartServiceImplTest {
   CartRepository cartRepository;
 
   @Mock
-  ExchangeRateClient exchangeRateClient;
+  ExchangeRateService exchangeRateService;
 
   private CartServiceImpl service;
-  private Clock fixedClock;
-  private CartProperties cartProperties;
 
   @BeforeEach
   void setUp() {
-    fixedClock = Clock.fixed(NOW, ZoneId.of("UTC"));
-    cartProperties = new CartProperties();
+    Clock fixedClock = Clock.fixed(NOW, ZoneId.of("UTC"));
+    CartProperties cartProperties = new CartProperties();
     cartProperties.setTtl(Duration.ofMinutes(30));
-    service = new CartServiceImpl(cartRepository, cartProperties, fixedClock, exchangeRateClient);
+    service = new CartServiceImpl(cartRepository, cartProperties, fixedClock, exchangeRateService);
   }
 
   // -- Helpers ---------------------------------------------------------------

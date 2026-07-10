@@ -1,6 +1,6 @@
 package com.atlas.cart.service;
 
-import com.atlas.cart.client.ExchangeRateClient;
+import com.atlas.cart.client.ExchangeRateService;
 import com.atlas.cart.client.dto.ExchangeRateDto;
 import com.atlas.cart.config.CartProperties;
 import com.atlas.cart.dto.*;
@@ -35,7 +35,7 @@ public class CartServiceImpl implements CartService {
   private final CartRepository cartRepository;
   private final CartProperties cartProperties;
   private final Clock clock;
-  private final ExchangeRateClient exchangeRateClient;
+  private final ExchangeRateService exchangeRateService;
 
   @Override
   @Transactional
@@ -263,7 +263,7 @@ public class CartServiceImpl implements CartService {
     if (currency.equals(CURRENCY_USD)) return BigDecimal.ONE;
     List<ExchangeRateDto> exchangeRates;
     try {
-       exchangeRates = exchangeRateClient.getUSDExchangeRates();
+       exchangeRates = exchangeRateService.getUSDExchangeRates();
     } catch (FeignException e) {
       log.error("Exchange Rate unavailable for Currency={}", currency, e);
       throw new CurrencyMismatchException(cartItemId);
