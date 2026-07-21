@@ -46,18 +46,14 @@ public class CacheConfig implements CachingConfigurer {
      * other's entry despite living in different packages.
      */
     @Bean
-    RedisCacheConfiguration redisCacheConfiguration(
-            @Value("${cart.exchange-rate.cache-ttl:15m}") Duration ttl) {
+    RedisCacheConfiguration redisCacheConfiguration(@Value("${cart.exchange-rate.cache-ttl:15m}") Duration ttl) {
         ObjectMapper mapper = new ObjectMapper();
-        JavaType rateListType = mapper.getTypeFactory()
-                .constructCollectionType(List.class, ExchangeRateDto.class);
-        Jackson2JsonRedisSerializer<Object> valueSerializer =
-                new Jackson2JsonRedisSerializer<>(mapper, rateListType);
+        JavaType rateListType = mapper.getTypeFactory().constructCollectionType(List.class, ExchangeRateDto.class);
+        Jackson2JsonRedisSerializer<Object> valueSerializer = new Jackson2JsonRedisSerializer<>(mapper, rateListType);
         return RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(ttl)
                 .disableCachingNullValues()
-                .serializeValuesWith(RedisSerializationContext.SerializationPair
-                        .fromSerializer(valueSerializer));
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(valueSerializer));
     }
 
     /** Never let a Redis outage break repricing — log the cache error and fall back to the source. */
@@ -66,15 +62,20 @@ public class CacheConfig implements CachingConfigurer {
         return new SimpleCacheErrorHandler() {
             @Override
             public void handleCacheGetError(RuntimeException exception, Cache cache, Object key) {
-                log.warn("Redis cache GET failed (cache={}, key={}) — falling back to source: {}",
-                        cache.getName(), key, exception.getMessage());
+                log.warn(
+                        "Redis cache GET failed (cache={}, key={}) — falling back to source: {}",
+                        cache.getName(),
+                        key,
+                        exception.getMessage());
             }
 
             @Override
-            public void handleCachePutError(RuntimeException exception, Cache cache, Object key,
-                                            Object value) {
-                log.warn("Redis cache PUT failed (cache={}, key={}) — continuing without caching: {}",
-                        cache.getName(), key, exception.getMessage());
+            public void handleCachePutError(RuntimeException exception, Cache cache, Object key, Object value) {
+                log.warn(
+                        "Redis cache PUT failed (cache={}, key={}) — continuing without caching: {}",
+                        cache.getName(),
+                        key,
+                        exception.getMessage());
             }
         };
     }

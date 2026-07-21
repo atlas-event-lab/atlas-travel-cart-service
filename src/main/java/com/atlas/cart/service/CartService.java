@@ -3,7 +3,6 @@ package com.atlas.cart.service;
 import com.atlas.cart.dto.CartItemUpsertRequest;
 import com.atlas.cart.dto.CartResponse;
 import com.atlas.cart.entity.CartItemType;
-
 import java.util.UUID;
 
 public interface CartService {

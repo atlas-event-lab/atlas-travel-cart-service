@@ -5,13 +5,19 @@ import com.atlas.cart.dto.CartResponse;
 import com.atlas.cart.entity.CartItemType;
 import com.atlas.cart.service.CartService;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST controller for the Travel Cart API (travel-cart.yaml).
@@ -23,7 +29,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CartController {
 
-  private final CartService cartService;
+    private final CartService cartService;
 
     @PostMapping
     public ResponseEntity<CartResponse> createCart(@AuthenticationPrincipal Jwt jwt) {
@@ -33,9 +39,7 @@ public class CartController {
     }
 
     @GetMapping("/{cartId}")
-    public ResponseEntity<CartResponse> getCart(
-            @PathVariable UUID cartId,
-            @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<CartResponse> getCart(@PathVariable UUID cartId, @AuthenticationPrincipal Jwt jwt) {
         return ResponseEntity.ok(cartService.getCart(cartId, extractUserId(jwt)));
     }
 
@@ -57,23 +61,17 @@ public class CartController {
 
     @DeleteMapping("/{cartId}/items/{itemId}")
     public ResponseEntity<CartResponse> removeItem(
-            @PathVariable UUID cartId,
-            @PathVariable UUID itemId,
-            @AuthenticationPrincipal Jwt jwt) {
+            @PathVariable UUID cartId, @PathVariable UUID itemId, @AuthenticationPrincipal Jwt jwt) {
         return ResponseEntity.ok(cartService.removeItem(cartId, extractUserId(jwt), itemId));
     }
 
     @DeleteMapping("/{cartId}/items")
-    public ResponseEntity<CartResponse> clearItems(
-            @PathVariable UUID cartId,
-            @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<CartResponse> clearItems(@PathVariable UUID cartId, @AuthenticationPrincipal Jwt jwt) {
         return ResponseEntity.ok(cartService.clearItems(cartId, extractUserId(jwt)));
     }
 
     @PostMapping("/{cartId}/conversion")
-    public ResponseEntity<CartResponse> convertCart(
-            @PathVariable UUID cartId,
-            @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<CartResponse> convertCart(@PathVariable UUID cartId, @AuthenticationPrincipal Jwt jwt) {
         return ResponseEntity.ok(cartService.convertCart(cartId, extractUserId(jwt)));
     }
 

@@ -1,12 +1,11 @@
 package com.atlas.cart.config;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.convert.DurationUnit;
-
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 
 @Setter
 @Getter
@@ -20,5 +19,4 @@ public class CartProperties {
 
     /** Max hotel stay length accepted on a cart item (ADR-0011); must match Search/Booking. */
     private int maxStayNights = 30;
-
 }

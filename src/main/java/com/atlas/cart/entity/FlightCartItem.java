@@ -2,10 +2,9 @@ package com.atlas.cart.entity;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-
-import java.util.UUID;
 
 /**
  * A flight selection in a Cart (ADR-0011). Carries no stay dates. Persisted in the shared

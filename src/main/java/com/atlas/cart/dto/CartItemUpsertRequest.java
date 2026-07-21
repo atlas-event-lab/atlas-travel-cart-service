@@ -2,10 +2,9 @@ package com.atlas.cart.dto;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.format.annotation.DateTimeFormat;
-
 import java.time.LocalDate;
 import java.util.UUID;
+import org.springframework.format.annotation.DateTimeFormat;
 
 /**
  * Upsert request for a cart flight/hotel selection (travel-cart.yaml). {@code checkIn} / {@code checkOut}
@@ -13,13 +12,8 @@ import java.util.UUID;
  * the range.
  */
 public record CartItemUpsertRequest(
-    @NotNull UUID resourceId,
-    @NotNull MoneyDto unitPrice,
-    @NotNull @Min(1) Integer quantity,
-
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    LocalDate checkIn,
-
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    LocalDate checkOut
-) {}
+        @NotNull UUID resourceId,
+        @NotNull MoneyDto unitPrice,
+        @NotNull @Min(1) Integer quantity,
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkIn,
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkOut) {}
